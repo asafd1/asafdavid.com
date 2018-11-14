@@ -1,0 +1,323 @@
+<html>
+<Title>
+Rezef - translate dna coding sequence to a protein sequence
+</Title>
+<!--
+translate dna coding sequence to a protein sequence
+complementary stand dna sequence
+numbering amino acids
+3 in one sequence analysis
+-->
+<head>
+
+<style type="text/css">
+<!--
+  @media print {
+    body {visibility:hidden;}
+    .print {visibility:visible;}
+  }
+-->
+</style>
+
+<!--
+<script src="http://code.jquery.com/jquery-latest.js"></script>
+-->
+
+<script>
+
+//window.onload=init;
+
+function init()
+{
+  // problem was in FF: the text comes in giberish (on IE it worked fine)
+  // so this feature is skipped
+  var language = window.navigator.userLanguage || window.navigator.language;
+  if (language == "he" || language == "he-IL"){
+    document.getElementById("translate_btn").value= "תרגם";
+	document.getElementById("print_btn").value= "הדפס";
+  }
+}
+
+var arrayGeneticCode = 
+  ["Phe","Phe","Leu","Leu",
+  "Ser","Ser","Ser","Ser",
+  "Tyr","Tyr","*","*",
+  "Cys","Cys","*","Trp",
+  "Leu","Leu","Leu","Leu",
+  "Pro","Pro","Pro","Pro",
+  "His","His","Gln","Gln",
+  "Arg","Arg","Arg","Arg",
+  "Ile","Ile","Ile","Met",
+  "Thr","Thr","Thr","Thr",
+  "Asn","Asn","Lys","Lys",
+  "Ser","Ser","Arg","Arg",
+  "Val","Val","Val","Val",
+  "Ala","Ala","Ala","Ala",
+  "Asp","Asp","Glu","Glu",
+  "Gly","Gly","Gly","Gly"];
+
+var arrayDataOrig = [];
+var arrayDataInverse = [];
+var arrayDataConvert = [];
+
+function getCharValue(c)
+{
+  if (c == 'T' || c == 't')
+  {
+    return 0;
+  }
+  if (c == 'C' || c == 'c')
+  {
+    return 1;
+  }
+  if (c == 'A' || c == 'a')
+  {
+    return 2;
+  }
+  if (c == 'G' || c == 'g')
+  {
+    return 3;
+  }
+}
+
+function getConvert(triple)
+{
+  var x = getCharValue(triple.charAt(0));
+  var y = getCharValue(triple.charAt(1));
+  var z = getCharValue(triple.charAt(2));
+
+  var position = x*16 + y*4 + z
+
+  return arrayGeneticCode[position];
+}
+
+function getInverseChar(c)
+{
+  if (c == 'A' || c == 'a')
+  {
+    return 'T';
+  }
+  if (c == 'T' || c == 't')
+  {
+    return 'A';
+  }
+  if (c == 'G' || c == 'g')
+  {
+    return 'C';
+  }
+  if (c == 'C' || c == 'c')
+  {
+    return 'G';
+  }
+}
+
+function getInverse(triple)
+{
+  var newTriple = "";
+  
+  newTriple += getInverseChar(triple.charAt(0));
+  newTriple += getInverseChar(triple.charAt(1));
+  newTriple += getInverseChar(triple.charAt(2));
+
+  return newTriple;
+}
+
+function createDataArrays(dataString)
+{
+  var triple;
+  var i = 0;
+
+  while (dataString.length > 2)
+  {
+    triple = dataString.substring(0,3);
+    dataString = dataString.substring(3);
+
+    arrayDataOrig[i] = triple;
+    arrayDataInverse[i] = getInverse(triple);
+    arrayDataConvert[i] = getConvert(triple);
+
+    i++;
+  }
+
+  return i;
+}
+
+function padDigits(n, totalDigits) 
+{ 
+  n = n.toString(); 
+  var pd = ''; 
+  if (totalDigits > n.length) 
+  { 
+    for (i=0; i < (totalDigits-n.length); i++) 
+    { 
+      pd += ' '; 
+    } 
+  } 
+        return pd + n.toString(); 
+} 
+
+function removeNL(s) 
+{
+  /*
+  ** Remove NewLine, CarriageReturn and Tab characters from a String
+  **   s  string to be processed
+  ** returns new string
+  */
+  r = "";
+  for (i=0; i < s.length; i++) {
+    if (s.charAt(i) == 'T' || s.charAt(i) == 't' ||
+        s.charAt(i) == 'G' || s.charAt(i) == 'g' ||
+        s.charAt(i) == 'A' || s.charAt(i) == 'a' ||
+        s.charAt(i) == 'C' || s.charAt(i) == 'c') {
+      r += s.charAt(i);
+      }
+    }
+  return r.toUpperCase();
+}
+
+function formatDataToHtml(s) 
+{
+  /*
+  ** add <br> instead of '\n'
+  */
+  r = "";
+  for (i=0; i < s.length; i++) {
+    if (s.charAt(i) == '\n') {
+      r += "<br>";
+    } else if (s.charAt(i) == ' ') {
+      r += "&nbsp;"
+    } else {
+      r += s.charAt(i).toUpperCase();
+    }
+  }
+  return r;
+}
+
+function convert()
+{
+  var _form=document.ex1;
+  var _object1=_form.t1;
+  var _object2=_form.t2;
+
+  var origStr = removeNL(_object1.value);
+  var numOfSeqs = createDataArrays(origStr);
+  var txt = "";
+  var i;
+  var prevIndex = 0;
+  var numInLine = parseInt(70 / 5);
+  while (prevIndex < arrayDataOrig.length)
+  {
+    if (prevIndex + numInLine > arrayDataOrig.length)
+    {
+      numInLine = arrayDataOrig.length - prevIndex;
+    }
+
+    for (i=prevIndex; i < prevIndex+numInLine; i++)
+    {
+      txt += padDigits(i+1,4) + " ";
+    }
+    txt += "\n"
+
+    for (i=prevIndex; i < prevIndex+numInLine; i++)
+    {
+      txt += " " + arrayDataOrig[i] + " ";
+    }
+    txt += "\n"
+    for (i=prevIndex; i < prevIndex+numInLine; i++)
+    {
+      txt += " " + arrayDataInverse[i] + " ";
+    }
+    txt += "\n"
+    for (i=prevIndex; i < prevIndex+numInLine; i++)
+    {
+      txt += " " + arrayDataConvert[i] + " ";
+    }
+    txt += "\n"
+    txt += "\n"
+    
+    prevIndex += numInLine;
+  }
+
+//  var numOfLines = parseInt(numOfSeqs / numInLine);
+//  if (numOfLines * 5 > _object2.rows)
+//  {
+//    _object2.rows = numOfLines * 5;  
+//  }
+
+  _object2.value=txt;
+}
+
+function printDiv()
+{
+    newWin = window.open("");
+    newWin.document.write("<div style=\"font-family:Courier New\">");
+    newWin.document.write(formatDataToHtml(document.ex1.t2.value));
+    newWin.document.write("</div>");
+    newWin.print();
+    newWin.document.close(); // necessary for IE 
+	newWin.close();
+}
+
+</script>
+
+
+</head>
+<body>
+<form name=ex1>
+<table align=center border=0>
+  <tr>
+    <td colspan="2">
+      <font style="font-family:Courier New" style="color:#003399">Put your DNA coding sequence here:</font>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <textarea name=t1 ROWS="5" COLS="70" style="font-family:Courier New" style="color:#003399"></textarea>
+    </td>
+  </tr>
+  <tr>
+    <td align=center width=500>
+      <input align=right id="translate_btn" type=button value="Translate" onclick=convert()>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <font></font>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <font></font>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <font style="font-family:Courier New" style="color:#003399">The resulting Protein Sequence:</font>
+    </td>
+    <td>
+<!--      <input type="button" value="Print Sequence" onclick="window.print();return false;">-->
+      <input id="print_btn" type="button" value="Print it" onclick=printDiv()>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <textarea id=t2 name=t2 ROWS="30" COLS="70" style="font-family:Courier New" style="color:#003399"></textarea>
+    </td>
+  </tr>
+</table>
+</form>
+
+<BR><center>Rezef 0.2 - All rights reserved to <a href='http://twitter.com/asafd1' target="_blank">Asaf David</a> & <a href='http://www.tau.ac.il/lifesci/departments/biochem/members/azem/Lab_members/milit_marom.html' target="_blank">Dr. Milit Marom</a></center>
+<!-- START OF HIT COUNTER CODE -->
+<div style="visibility: hidden"> 
+<br>
+<center>
+<script language="JavaScript" src="http://www.counter160.com/js.js?img=13"></script><br><a href="http://www.000webhost.com"><img src="http://www.counter160.com/images/13/left.png" alt="Free web hosting" border="0" align="texttop"></a><a href="http://www.hosting24.com"><img alt="Web hosting" src="http://www.counter160.com/images/13/right.png" border="0" align="texttop"></a>
+</center>
+</div>
+<!-- END OF HIT COUNTER CODE -->
+
+</body>
+</html>
+
+
